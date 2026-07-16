@@ -1,0 +1,1 @@
+{"version":3,"file":"layout-sync.d.ts","sourceRoot":"","sources":["../../src/layout-sync.ts"],"names":[],"mappings":"AAAA,OAAO,EACH,KAAK,oBAAoB,EAAE,qBAAqB,EAChD,KAAK,sBAAsB,EAAE,eAAe,EAC5C,KAAK,qBAAqB,EAAE,cAAc,EAC1C,KAAK,iBAAiB,EAAE,YAAY,EACpC,KAAK,yBAAyB,EAAE,oBAAoB,EACpD,kBAAkB,EAAE,6BAA6B,EACjD,kBAAkB,EACrB,MAAM,wBAAwB,CAAC"}

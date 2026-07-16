@@ -1,0 +1,1 @@
+{"version":3,"file":"canvasHotkey.d.ts","sourceRoot":"","sources":["../../../src/diagram/canvasHotkey.tsx"],"names":[],"mappings":"AAEA,OAAO,EAAa,KAAK,YAAY,EAA6B,MAAM,qBAAqB,CAAC;AAU9F,MAAM,WAAW,YAAY;IAIzB,QAAQ,CAAC,IAAI,EAAE,MAAM,CAAC;CACzB;AASD,wBAAgB,eAAe,CAC3B,MAAM,EAAE,YAAY,GAAG,SAAS,GAAG,IAAI,EACvC,MAAM,EAAE,CAAC,MAAM,IAAI,CAAC,GAAG,SAAS,GACjC,YAAY,GAAG,SAAS,CA2B1B"}
