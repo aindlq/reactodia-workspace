@@ -171,19 +171,26 @@ export function toMatchableSelectors(selectorText: string): string[] {
 function splitSelectorList(selectorText: string): string[] {
     const selectors: string[] = [];
     let depth = 0;
-    let quote: string | undefined;
+    let inAttibute = false;
+    let inQuote: '"' | '\'' | undefined;
     let start = 0;
     for (let i = 0; i < selectorText.length; i++) {
         const ch = selectorText[i];
-        if (quote !== undefined) {
-            if (ch === quote && selectorText[i - 1] !== '\\') {
-                quote = undefined;
+        if (inQuote !== undefined) {
+            if (ch === inQuote && selectorText[i - 1] !== '\\') {
+                inQuote = undefined;
             }
         } else if (ch === '"' || ch === '\'') {
-            quote = ch;
-        } else if (ch === '(' || ch === '[') {
+            inQuote = ch;
+        } else if (inAttibute) {
+            if (ch === ']') {
+                inAttibute = false;
+            }
+        } else if (ch === '[') {
+            inAttibute = true;
+        } else if (ch === '(') {
             depth++;
-        } else if (ch === ')' || ch === ']') {
+        } else if (ch === ')') {
             depth--;
         } else if (ch === ',' && depth === 0) {
             selectors.push(selectorText.slice(start, i));

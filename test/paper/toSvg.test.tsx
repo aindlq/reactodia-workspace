@@ -341,6 +341,11 @@ describe('toMatchableSelectors()', () => {
         expect(toMatchableSelectors(':is([data-x="a,b"], .c)')).toEqual([':is([data-x="a,b"], .c)']);
     });
 
+    it('correctly parses unclosed parenthesis inside unquoted attibute selector', () => {
+        expect(toMatchableSelectors(':is([data-x\\(]), .y')).toEqual([':is([data-x\\(])', '.y']);
+        expect(toMatchableSelectors(':is([data-x\\)]), .y')).toEqual([':is([data-x\\)])', '.y']);
+    });
+
     it('splits only top-level commas in a mixed list', () => {
         expect(toMatchableSelectors(':is(.a, .b), :not(.c, .d)')).toEqual([':is(.a, .b)', ':not(.c, .d)']);
         expect(toMatchableSelectors(':is(.a, .b)::after, .c')).toEqual([':is(.a, .b)', '.c']);
