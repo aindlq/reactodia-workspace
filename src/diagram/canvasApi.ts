@@ -6,7 +6,7 @@ import type {
     CanvasMetrics, CanvasPaneMetrics, CenterToOptions, ScaleOptions, ViewportOptions,
 } from '../paper/paperApi';
 import type { PaperTransform } from '../paper/paperLayers';
-import type { ToDataURLOptions } from '../paper/toSvg';
+import type { EmbedFontsOptions, ToDataURLOptions } from '../paper/toSvg';
 
 import type { RenderingState } from './renderingState';
 import type { Cell } from './elements';
@@ -441,6 +441,16 @@ export interface ExportSvgOptions {
      * @default ["[data-reactodia-no-export]"]
      */
     removeByCssSelectors?: ReadonlyArray<string>;
+    /**
+     * Whether to embed the web fonts used by the diagram into the exported
+     * image, or the options to do so with.
+     *
+     * An exported image is not able to load an external font, so without
+     * embedding the text is displayed with a fallback font instead.
+     *
+     * @default true
+     */
+    embedFonts?: boolean | EmbedFontsOptions;
     /**
      * Whether to prepend XML encoding header to the exported SVG string.
      *

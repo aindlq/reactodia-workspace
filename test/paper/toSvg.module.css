@@ -23,3 +23,7 @@
 .resourceBackground {
   background: url("./toSvg.resource.svg") 0px 0px / contain no-repeat;
 }
+
+.embeddedFont {
+  font-family: 'Reactodia Test Font', sans-serif;
+}

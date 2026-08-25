@@ -13,9 +13,34 @@ export interface ToSVGOptions {
     convertImagesToDataUris?: boolean;
     /** @default [] */
     removeByCssSelectors?: ReadonlyArray<string>;
+    /** @default true */
+    embedFonts?: boolean | EmbedFontsOptions;
     watermarkSvg?: string;
     /** @default false */
     addXmlHeader?: boolean;
+}
+
+/**
+ * Options for embedding the web fonts used by an exported diagram.
+ *
+ * @see {@link ToSVGOptions.embedFonts}
+ */
+export interface EmbedFontsOptions {
+    /**
+     * Maximum size of a single font file to embed, in bytes.
+     *
+     * Larger fonts are skipped: icon fonts in particular are often many
+     * megabytes, and embedding one would dwarf the diagram itself.
+     *
+     * @default 262144
+     */
+    maxFileSize?: number;
+    /**
+     * Maximum total size of the embedded fonts, in bytes.
+     *
+     * @default 524288
+     */
+    maxTotalSize?: number;
 }
 
 interface Bounds {
@@ -46,6 +71,7 @@ async function exportSVG(options: ToSVGOptions): Promise<SVGElement> {
         preserveDimensions,
         convertImagesToDataUris,
         removeByCssSelectors = [],
+        embedFonts = true,
     } = options;
 
     let clonedPaperSvg!: ReturnType<typeof composeExportedSvg>;
@@ -107,10 +133,20 @@ async function exportSVG(options: ToSVGOptions): Promise<SVGElement> {
     }
     embedImageUrlsToInlineStyles(composedSvg, imageUrls);
 
+    const fontFaces = embedFonts
+        ? await embedUsedFonts(
+            composedSvg,
+            appliedCssRules,
+            cssPropertyValues,
+            embedFonts === true ? {} : embedFonts
+        )
+        : [];
+
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
     defs.innerHTML = (
         `<style>${serializeCssPropertyValues(cssPropertyValues)}</style>\n` +
-        `<style>${exportCssRules(appliedCssRules, imageUrls)}</style>`
+        `<style>${exportCssRules(appliedCssRules, imageUrls)}</style>` +
+        (fontFaces.length > 0 ? `\n<style>${fontFaces.join('\n')}</style>` : '')
     );
     composedSvg.insertBefore(defs, composedSvg.firstChild);
 
@@ -141,6 +177,9 @@ function addWatermark(svg: SVGElement, viewBox: Rect, watermarkSvg: string) {
 function collectAppliedCssFromDocument(targetSubtree: Element): CSSStyleRule[] {
     const appliedRules: CSSStyleRule[] = [];
     enumerateStylesheets(rule => {
+        if (!(rule instanceof CSSStyleRule)) {
+            return;
+        }
         const applies = toMatchableSelectors(rule.selectorText).some(selector => {
             try {
                 return Boolean(targetSubtree.querySelector(selector));
@@ -347,6 +386,166 @@ function serializeCssImageUrl(dataUri: string): string {
     return `url("${dataUri}")`;
 }
 
+const DEFAULT_MAX_FONT_FILE_SIZE = 256 * 1024;
+const DEFAULT_MAX_FONT_TOTAL_SIZE = 512 * 1024;
+
+/**
+ * Inlines the web fonts used by the exported subtree as data URIs.
+ *
+ * Only `CSSStyleRule`s are exported into the result, so `@font-face` rules are
+ * left behind, and an exported image is not able to load an external font in
+ * any case: without this the text falls back to whatever the viewing system
+ * happens to provide, which changes the metrics as well as the typeface.
+ */
+async function embedUsedFonts(
+    target: Element,
+    appliedRules: readonly CSSStyleRule[],
+    propertyValues: ReadonlyMap<string, string>,
+    options: EmbedFontsOptions
+): Promise<string[]> {
+    const {
+        maxFileSize = DEFAULT_MAX_FONT_FILE_SIZE,
+        maxTotalSize = DEFAULT_MAX_FONT_TOTAL_SIZE,
+    } = options;
+
+    const families = collectUsedFontFamilies(target, appliedRules, propertyValues);
+    if (families.size === 0) {
+        return [];
+    }
+
+    const fontFaces: string[] = [];
+    let totalSize = 0;
+    for (const rule of collectFontFaceRules()) {
+        const family = primaryFontFamily(
+            rule.style.getPropertyValue('font-family'), propertyValues
+        );
+        if (!(family && families.has(family))) {
+            continue;
+        }
+        const source = findFontUrl(rule.style.getPropertyValue('src'));
+        if (!source) {
+            continue;
+        }
+        try {
+            const response = await fetch(source);
+            if (!response.ok) {
+                continue;
+            }
+            const declaredSize = Number(response.headers.get('content-length'));
+            if (declaredSize > maxFileSize) {
+                continue;
+            }
+            const font = await response.blob();
+            if (font.size > maxFileSize || totalSize + font.size > maxTotalSize) {
+                continue;
+            }
+            totalSize += font.size;
+            fontFaces.push(await serializeFontFace(rule, font));
+        } catch (err) {
+            console.warn('Reactodia: Failed to export font: ' + source, err);
+        }
+    }
+    return fontFaces;
+}
+
+/**
+ * Collects the font families the exported subtree asks for.
+ *
+ * Only the first family of each stack is taken: the rest are fallbacks, which
+ * are not used while the primary one is available.
+ */
+function collectUsedFontFamilies(
+    target: Element,
+    appliedRules: readonly CSSStyleRule[],
+    propertyValues: ReadonlyMap<string, string>
+): Set<string> {
+    const families = new Set<string>();
+    const addFrom = (value: string) => {
+        const family = primaryFontFamily(value, propertyValues);
+        if (family) {
+            families.add(family);
+        }
+    };
+
+    for (const rule of appliedRules) {
+        addFrom(rule.style.getPropertyValue('font-family'));
+    }
+    enumerateDescendants(target, element => {
+        if (element instanceof HTMLElement) {
+            addFrom(element.style.fontFamily);
+        }
+    });
+
+    return families;
+}
+
+/** Returns the first family of a font stack, normalized for comparison. */
+function primaryFontFamily(
+    value: string,
+    propertyValues: ReadonlyMap<string, string>
+): string | undefined {
+    const stack = substituteCssVariables(value, propertyValues);
+    const family = stack.split(',')[0].trim().replace(/^["']|["']$/g, '').toLowerCase();
+    return family.length > 0 ? family : undefined;
+}
+
+/** Substitutes `var()` references by the captured custom property values. */
+function substituteCssVariables(
+    value: string,
+    propertyValues: ReadonlyMap<string, string>
+): string {
+    // The captured values are already substituted, so a single pass is enough;
+    // a fallback which itself contains `()` is not handled.
+    return value.replace(
+        /var\(\s*(--[\w-]+)\s*(?:,([^)]*))?\)/g,
+        (match, property: string, fallback: string | undefined) =>
+            propertyValues.get(property) ?? fallback ?? ''
+    );
+}
+
+function collectFontFaceRules(): CSSFontFaceRule[] {
+    const fontFaces: CSSFontFaceRule[] = [];
+    enumerateStylesheets(rule => {
+        if (rule instanceof CSSFontFaceRule) {
+            fontFaces.push(rule);
+        }
+    });
+    return fontFaces;
+}
+
+/** Returns the most compact source a font face offers, preferring WOFF2. */
+function findFontUrl(src: string): string | undefined {
+    const urls = Array.from(
+        src.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/g),
+        match => match[1]
+    );
+    const source = urls.find(url => url.includes('.woff2')) ?? urls[0];
+    if (!source || source.startsWith('data:')) {
+        return undefined;
+    }
+    try {
+        return new URL(source, document.baseURI).href;
+    } catch (err) {
+        return undefined;
+    }
+}
+
+async function serializeFontFace(rule: CSSFontFaceRule, font: Blob): Promise<string> {
+    const dataUri = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(font);
+    });
+    const descriptors = [
+        `font-family:${rule.style.getPropertyValue('font-family')}`,
+        `font-style:${rule.style.getPropertyValue('font-style') || 'normal'}`,
+        `font-weight:${rule.style.getPropertyValue('font-weight') || 'normal'}`,
+        `src:url(${dataUri})`,
+    ];
+    return `@font-face{${descriptors.join(';')}}`;
+}
+
 function composeExportedSvg(layers: ToSVGOptions['layers'], viewBox: Rect): {
     composedSvg: SVGSVGElement;
     imageBounds: { [path: string]: Bounds };
@@ -460,6 +659,9 @@ function loadCrossOriginImage(src: string): Promise<HTMLImageElement> {
 
 function collectKnownPropertiesFromCssRules(foundProperties: Set<string>): void {
     enumerateStylesheets(rule => {
+        if (!(rule instanceof CSSStyleRule)) {
+            return;
+        }
         for (let i = 0; i < rule.style.length; i++) {
             const property = rule.style[i];
             if (property.startsWith('--') && !foundProperties.has(property)) {
@@ -520,16 +722,15 @@ function captureCustomCssPropertyValues(
     return propertyValues;
 }
 
-function enumerateStylesheets(visit: (rule: CSSStyleRule) => void): void {
+function enumerateStylesheets(visit: (rule: CSSRule) => void): void {
     const visitedRules = new WeakSet<CSSRule>();
     const visitRule = (rule: CSSRule): void => {
         if (visitedRules.has(rule)) {
             return;
         }
         visitedRules.add(rule);
-        if (rule instanceof CSSStyleRule) {
-            visit(rule);
-        } else if (rule instanceof CSSLayerBlockRule) {
+        visit(rule);
+        if (rule instanceof CSSLayerBlockRule) {
             for (const subRule of rule.cssRules) {
                 visitRule(subRule);
             }

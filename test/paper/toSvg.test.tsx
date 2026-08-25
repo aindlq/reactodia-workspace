@@ -5,7 +5,7 @@ import { render } from 'vitest-browser-react';
 
 import type { ColorSchemeApi } from '../../src/coreUtils/colorScheme';
 import { HtmlPaperLayer, SvgPaperLayer, type PaperTransform } from '../../src/paper/paperLayers';
-import { toSVG, toMatchableSelectors } from '../../src/paper/toSvg';
+import { toSVG, toMatchableSelectors, type ToSVGOptions } from '../../src/paper/toSvg';
 
 import IconResource from './toSvg.resource.svg';
 import IconInline from './toSvg.inline.svg';
@@ -288,6 +288,82 @@ describe('toSvg()', () => {
         });
 
         await expect(exportedSvgString).toMatchFileSnapshot('toSvg.expected.withoutRemoved.svg');
+    });
+});
+
+describe('toSVG() embedFonts', () => {
+    const TEST_FAMILY = 'Reactodia Test Font';
+
+    async function exportWithFontFace(
+        embedFonts: ToSVGOptions['embedFonts'],
+        className?: string
+    ): Promise<string> {
+        // Any file works as a stand-in: the exporter embeds the bytes a face
+        // points at without interpreting them.
+        const fontFace = document.createElement('style');
+        fontFace.textContent =
+            `@font-face{font-family:'${TEST_FAMILY}';font-style:normal;` +
+            `font-weight:400;src:url("${IconResource}")}`;
+        document.head.appendChild(fontFace);
+        try {
+            const svgLayerRef = React.createRef<SVGSVGElement>();
+            const htmlLayerRef = React.createRef<HTMLDivElement>();
+            const paperTransform: PaperTransform = {
+                width: 100,
+                height: 100,
+                originX: 0,
+                originY: 0,
+                paddingX: 0,
+                paddingY: 0,
+                scale: 1,
+            };
+            await render(
+                <div>
+                    <SvgPaperLayer layerRef={svgLayerRef}
+                        paperTransform={paperTransform}>
+                        {/* empty */}
+                    </SvgPaperLayer>
+                    <HtmlPaperLayer layerRef={htmlLayerRef}
+                        paperTransform={paperTransform}>
+                        <span className={className}>text</span>
+                    </HtmlPaperLayer>
+                </div>
+            );
+            return await toSVG({
+                colorSchemeApi: DUMMY_COLOR_SCHEME_API,
+                styleRoot: svgLayerRef.current!,
+                contentBox: {x: 0, y: 0, width: paperTransform.width, height: paperTransform.height},
+                layers: [
+                    svgLayerRef.current!,
+                    htmlLayerRef.current!,
+                ],
+                embedFonts,
+            });
+        } finally {
+            fontFace.remove();
+        }
+    }
+
+    it('embeds a font used by the exported content', async () => {
+        const exported = await exportWithFontFace(true, styles.embeddedFont);
+        expect(exported).toContain(TEST_FAMILY);
+        expect(exported).toContain('@font-face{');
+        expect(exported).toContain('src:url(data:');
+    });
+
+    it('does not embed a font the exported content does not use', async () => {
+        const exported = await exportWithFontFace(true);
+        expect(exported).not.toContain(TEST_FAMILY);
+    });
+
+    it('does not embed a font over the size limit', async () => {
+        const exported = await exportWithFontFace({maxFileSize: 1}, styles.embeddedFont);
+        expect(exported).not.toContain('src:url(data:');
+    });
+
+    it('does not embed anything when disabled', async () => {
+        const exported = await exportWithFontFace(false, styles.embeddedFont);
+        expect(exported).not.toContain('@font-face{');
     });
 });
 
