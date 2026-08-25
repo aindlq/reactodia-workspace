@@ -13,6 +13,7 @@ export interface ToSVGOptions {
     convertImagesToDataUris?: boolean;
     /** @default [] */
     removeByCssSelectors?: ReadonlyArray<string>;
+    transformExported?: (target: SVGElement) => void | Promise<void>;
     watermarkSvg?: string;
     /** @default false */
     addXmlHeader?: boolean;
@@ -46,6 +47,7 @@ async function exportSVG(options: ToSVGOptions): Promise<SVGElement> {
         preserveDimensions,
         convertImagesToDataUris,
         removeByCssSelectors = [],
+        transformExported,
     } = options;
 
     let clonedPaperSvg!: ReturnType<typeof composeExportedSvg>;
@@ -64,6 +66,10 @@ async function exportSVG(options: ToSVGOptions): Promise<SVGElement> {
         for (const node of composedSvg.querySelectorAll(selector)) {
             node.remove();
         }
+    }
+
+    if (transformExported) {
+        await transformExported(composedSvg);
     }
 
     // Workaround to include only library-related stylesheets

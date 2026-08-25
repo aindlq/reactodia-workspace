@@ -23,3 +23,7 @@
 .resourceBackground {
   background: url("./toSvg.resource.svg") 0px 0px / contain no-repeat;
 }
+
+.transformed {
+  color: rgb(1, 2, 3);
+}

@@ -291,6 +291,97 @@ describe('toSvg()', () => {
     });
 });
 
+describe('toSVG() transformExported', () => {
+    it('applies the transform and collects CSS for what it added', async () => {
+        const svgLayerRef = React.createRef<SVGSVGElement>();
+        const htmlLayerRef = React.createRef<HTMLDivElement>();
+        const paperTransform: PaperTransform = {
+            width: 100,
+            height: 100,
+            originX: 0,
+            originY: 0,
+            paddingX: 0,
+            paddingY: 0,
+            scale: 1,
+        };
+        await render(
+            <div>
+                <SvgPaperLayer layerRef={svgLayerRef}
+                    paperTransform={paperTransform}>
+                    {/* empty */}
+                </SvgPaperLayer>
+                <HtmlPaperLayer layerRef={htmlLayerRef}
+                    paperTransform={paperTransform}>
+                    <span data-replace-me='true'>placeholder</span>
+                </HtmlPaperLayer>
+            </div>
+        );
+
+        const exportedSvgString = await toSVG({
+            colorSchemeApi: DUMMY_COLOR_SCHEME_API,
+            styleRoot: svgLayerRef.current!,
+            contentBox: {x: 0, y: 0, width: paperTransform.width, height: paperTransform.height},
+            layers: [
+                svgLayerRef.current!,
+                htmlLayerRef.current!,
+            ],
+            transformExported: async target => {
+                await Promise.resolve();
+                for (const node of target.querySelectorAll('[data-replace-me]')) {
+                    node.removeAttribute('data-replace-me');
+                    node.setAttribute('class', styles.transformed);
+                    node.textContent = 'replaced';
+                }
+            },
+        });
+
+        expect(exportedSvgString).toContain('replaced');
+        expect(exportedSvgString).not.toContain('placeholder');
+        // The transform runs before CSS collection, so rules which match only
+        // the transformed content are exported too.
+        expect(exportedSvgString).toContain(styles.transformed);
+        expect(exportedSvgString).toContain('rgb(1, 2, 3)');
+    });
+
+    it('exports without a transform', async () => {
+        const svgLayerRef = React.createRef<SVGSVGElement>();
+        const htmlLayerRef = React.createRef<HTMLDivElement>();
+        const paperTransform: PaperTransform = {
+            width: 100,
+            height: 100,
+            originX: 0,
+            originY: 0,
+            paddingX: 0,
+            paddingY: 0,
+            scale: 1,
+        };
+        await render(
+            <div>
+                <SvgPaperLayer layerRef={svgLayerRef}
+                    paperTransform={paperTransform}>
+                    {/* empty */}
+                </SvgPaperLayer>
+                <HtmlPaperLayer layerRef={htmlLayerRef}
+                    paperTransform={paperTransform}>
+                    <span>untouched</span>
+                </HtmlPaperLayer>
+            </div>
+        );
+
+        const exportedSvgString = await toSVG({
+            colorSchemeApi: DUMMY_COLOR_SCHEME_API,
+            styleRoot: svgLayerRef.current!,
+            contentBox: {x: 0, y: 0, width: paperTransform.width, height: paperTransform.height},
+            layers: [
+                svgLayerRef.current!,
+                htmlLayerRef.current!,
+            ],
+        });
+
+        expect(exportedSvgString).toContain('untouched');
+    });
+});
+
 describe('toMatchableSelectors()', () => {
     it('returns plain selectors unchanged', () => {
         expect(toMatchableSelectors('.card')).toEqual(['.card']);
