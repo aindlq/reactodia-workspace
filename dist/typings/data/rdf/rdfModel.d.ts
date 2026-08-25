@@ -1,0 +1,20 @@
+import * as RdfJs from '@rdfjs/types';
+export type NamedNode<T extends string = string> = RdfJs.NamedNode<T>;
+export type BlankNode = RdfJs.BlankNode;
+export type Literal = RdfJs.Literal;
+export type Variable = RdfJs.Variable;
+export type DefaultGraph = RdfJs.DefaultGraph;
+export type BaseQuad = RdfJs.BaseQuad;
+export type Quad = RdfJs.Quad;
+export type Term = NamedNode | BlankNode | Literal | Variable | DefaultGraph | BaseQuad;
+export type DataFactory = RdfJs.DataFactory;
+export declare const DefaultDataFactory: RdfJs.DataFactory;
+export declare function looksLikeTerm(value: unknown): value is Term;
+export declare function termToString(node: Term): string;
+export declare function hashTerm(node: Term): number;
+export declare function equalTerms(a: Term, b: Term): boolean;
+export declare function compareTerms(a: Term, b: Term): number;
+export declare function hashQuad(quad: Quad): number;
+export declare function equalQuads(a: Quad, b: Quad): boolean;
+export declare function getLocalName(uri: string): string | undefined;
+//# sourceMappingURL=rdfModel.d.ts.map

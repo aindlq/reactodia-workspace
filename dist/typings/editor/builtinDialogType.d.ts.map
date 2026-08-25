@@ -1,0 +1,1 @@
+{"version":3,"file":"builtinDialogType.d.ts","sourceRoot":"","sources":["../../../src/editor/builtinDialogType.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,iBAAiB,EAAE,MAAM,qBAAqB,CAAC;AAO7D,eAAO,MAAM,iBAAiB;8BACsB,iBAAiB;yBAC3B,iBAAiB;2BACb,iBAAiB;iCACL,iBAAiB;yBACjC,iBAAiB;CACjD,CAAC"}

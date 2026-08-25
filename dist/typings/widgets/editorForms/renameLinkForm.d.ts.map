@@ -1,0 +1,1 @@
+{"version":3,"file":"renameLinkForm.d.ts","sourceRoot":"","sources":["../../../../src/widgets/editorForms/renameLinkForm.tsx"],"names":[],"mappings":"AAAA,OAAO,KAAK,KAAK,MAAM,OAAO,CAAC;AAK/B,OAAO,EAAE,IAAI,EAAE,MAAM,wBAAwB,CAAC;AAM9C,MAAM,WAAW,mBAAmB;IAChC,IAAI,EAAE,IAAI,CAAC;IACX,QAAQ,EAAE,MAAM,IAAI,CAAC;CACxB;AAED,wBAAgB,cAAc,CAAC,KAAK,EAAE,mBAAmB,qBAmDxD"}

@@ -1,0 +1,37 @@
+import type { Translation } from '../coreUtils/i18n';
+import type { AuthoringState } from '../editor/authoringState';
+import type { DataGraphStructure } from '../editor/dataDiagramModel';
+import type { ElementModel, ElementIri, LinkKey, LinkModel, PropertyTypeIri } from './model';
+export interface ValidationEvent {
+    readonly target: ElementModel;
+    readonly outboundLinks: ReadonlyArray<LinkModel>;
+    readonly graph: DataGraphStructure;
+    readonly state: AuthoringState;
+    readonly translation: Translation;
+    readonly language: string;
+    readonly signal: AbortSignal | undefined;
+}
+export interface ValidationResult {
+    readonly items: ReadonlyArray<ValidatedElement | ValidatedLink>;
+}
+export interface ValidatedElement {
+    readonly type: 'element';
+    readonly target: ElementIri;
+    readonly severity: ValidationSeverity;
+    readonly message: string;
+    readonly propertyType?: PropertyTypeIri;
+    readonly errorCause?: unknown;
+}
+export interface ValidatedLink {
+    readonly type: 'link';
+    readonly target: LinkKey;
+    readonly severity: ValidationSeverity;
+    readonly message: string;
+    readonly propertyType?: PropertyTypeIri;
+    readonly errorCause?: unknown;
+}
+export type ValidationSeverity = 'info' | 'warning' | 'error';
+export interface ValidationProvider {
+    validate(e: ValidationEvent): Promise<ValidationResult>;
+}
+//# sourceMappingURL=validationProvider.d.ts.map

@@ -1,0 +1,1 @@
+{"version":3,"file":"haloLink.d.ts","sourceRoot":"","sources":["../../../src/widgets/haloLink.tsx"],"names":[],"mappings":"AAAA,OAAO,KAAK,KAAK,MAAM,OAAO,CAAC;AA0B/B,MAAM,WAAW,aAAa;IAM1B,eAAe,CAAC,EAAE,MAAM,CAAC;IAMzB,UAAU,CAAC,EAAE,MAAM,CAAC;IAOpB,YAAY,CAAC,EAAE,MAAM,CAAC;IAetB,QAAQ,CAAC,EAAE,KAAK,CAAC,SAAS,CAAC;CAC9B;AAOD,wBAAgB,QAAQ,CAAC,KAAK,EAAE,aAAa,4BAsB5C"}

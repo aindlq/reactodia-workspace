@@ -1,0 +1,1 @@
+{"version":3,"file":"noSearchResults.d.ts","sourceRoot":"","sources":["../../../../src/widgets/utility/noSearchResults.tsx"],"names":[],"mappings":"AACA,OAAO,KAAK,KAAK,MAAM,OAAO,CAAC;AAM/B,wBAAgB,eAAe,CAAC,KAAK,EAAE;IACnC,SAAS,CAAC,EAAE,MAAM,CAAC;IACnB,QAAQ,EAAE,OAAO,CAAC;IAIlB,mBAAmB,CAAC,EAAE,MAAM,CAAC;IAC7B,OAAO,CAAC,EAAE,MAAM,CAAC;CACpB,qBAaA"}

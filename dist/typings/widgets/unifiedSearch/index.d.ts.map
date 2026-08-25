@@ -1,0 +1,1 @@
+{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../../src/widgets/unifiedSearch/index.ts"],"names":[],"mappings":"AAAA,OAAO,EACH,yBAAyB,EACzB,qBAAqB,EACrB,sBAAsB,GACzB,MAAM,yBAAyB,CAAC;AACjC,OAAO,EACH,KAAK,mCAAmC,EAAE,uBAAuB,GACpE,MAAM,iBAAiB,CAAC;AACzB,OAAO,EACH,aAAa,EAAE,KAAK,kBAAkB,EAAE,KAAK,qBAAqB,EAAE,KAAK,oBAAoB,GAChG,MAAM,iBAAiB,CAAC"}
