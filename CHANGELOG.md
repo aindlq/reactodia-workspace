@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 #### 🚀 New Features
 - Add `transformExported` option to `CanvasApi.exportSvg()` and `CanvasApi.exportRaster()` to adjust the exported diagram content before its styles are collected, e.g. to replace icon font glyphs by inline shapes. (by [@aindlq](https://github.com/aindlq))
 
+#### 🐛 Fixed
+- Embed the web fonts used by the diagram into an exported image, as it is not able to load an external font and displayed the text with a fallback font instead. Can be tuned or disabled with the `embedFonts` export option. (by [@aindlq](https://github.com/aindlq))
+
 
 ## [0.35.2] - 2026-08-08
 #### 🐛 Fixed

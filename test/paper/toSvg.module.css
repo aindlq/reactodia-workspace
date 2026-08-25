@@ -27,3 +27,7 @@
 .transformed {
   color: rgb(1, 2, 3);
 }
+
+.embeddedFont {
+  font-family: 'Reactodia Test Font', sans-serif;
+}

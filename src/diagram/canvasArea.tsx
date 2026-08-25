@@ -626,6 +626,7 @@ class CanvasController implements CanvasApi {
             contentPadding = {x: 100, y: 100},
             removeByCssSelectors = [],
             transformExported,
+            embedFonts,
         } = baseOptions;
         const linkLayer = this.linkLayer.current;
         const labelLayer = this.labelLayer.current;
@@ -654,6 +655,7 @@ class CanvasController implements CanvasApi {
                 ...removeByCssSelectors
             ],
             transformExported,
+            embedFonts,
             watermarkSvg: this.state.watermarkSvg,
         };
     }
