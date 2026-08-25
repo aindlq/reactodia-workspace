@@ -442,6 +442,18 @@ export interface ExportSvgOptions {
      */
     removeByCssSelectors?: ReadonlyArray<string>;
     /**
+     * Callback to adjust the exported diagram content before its styles are
+     * collected and the result is serialized or rasterized.
+     *
+     * The callback is passed a detached copy of the diagram, so it can freely
+     * change it without affecting the displayed canvas. Use it for content
+     * which cannot be exported as-is, e.g. to replace icon font glyphs by
+     * inline shapes, as an exported image is not able to load an external font.
+     *
+     * Any DOM changes made here are reflected in the collected CSS rules.
+     */
+    transformExported?: (target: SVGElement) => void | Promise<void>;
+    /**
      * Whether to prepend XML encoding header to the exported SVG string.
      *
      * Prepended header:

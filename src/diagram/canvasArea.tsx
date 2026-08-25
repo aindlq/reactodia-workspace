@@ -625,6 +625,7 @@ class CanvasController implements CanvasApi {
         const {
             contentPadding = {x: 100, y: 100},
             removeByCssSelectors = [],
+            transformExported,
         } = baseOptions;
         const linkLayer = this.linkLayer.current;
         const labelLayer = this.labelLayer.current;
@@ -652,6 +653,7 @@ class CanvasController implements CanvasApi {
                 '[data-reactodia-no-export]',
                 ...removeByCssSelectors
             ],
+            transformExported,
             watermarkSvg: this.state.watermarkSvg,
         };
     }
